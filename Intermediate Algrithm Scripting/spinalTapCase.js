@@ -1,8 +1,7 @@
 // Convert a string to spinal case. Spinal case is all-lowercase-words-joined-by-dashes
 function spinalCase(str) {
-  const regex1 = /([a-z])([A-Z])/g;
-  const regex2 = /\s/g;
-  const regex3 = /_/g;
+  const regex1 = /([a-z])([A-Z])/g; // grouping
+  const regex2 = /[_\s]/g;
 
   /* 
   1. First 'replace' method splits the camelCase string into a spaced sentence (A regex which will split if, and only if, the former character is lower-case and the latter is upper-case.)
@@ -10,15 +9,12 @@ function spinalCase(str) {
 
   2. Then we lowercase all string by 'toLowerCase' method.
 
-  3. Then we replace all spaces with '-' which is regex2
-
-  4. Then we replace all '_' with '-' which is regex3
+  3. Then we replace all spaces or '_' (underscore) with '-' which is regex2
   */
   return str
-    .replace(regex1, '$1 $2')
+    .replace(regex1, '$1 $2') // '$1 $2' means 'group1 group2' in regex
     .toLowerCase()
-    .replace(regex2, '-')
-    .replace(regex3, '-');
+    .replace(regex2, '-');
 }
 
 console.log(spinalCase('This Is Spinal Tap'));
