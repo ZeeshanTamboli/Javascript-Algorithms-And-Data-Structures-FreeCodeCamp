@@ -5,7 +5,7 @@
 // For example, sumFibs(10) should return 10 because all odd Fibonacci numbers less than or equal to 10 are 1, 1, 3, and 5.
 
 function sumFibs(num) {
-  let fibonacciSeries = [1, 1];
+  const fibonacciSeries = [1, 1];
   for (let i = 2; i <= num; i++) {
     const beforePreviousNumber = fibonacciSeries[i - 2];
     const previousNumber = fibonacciSeries[i - 1];
