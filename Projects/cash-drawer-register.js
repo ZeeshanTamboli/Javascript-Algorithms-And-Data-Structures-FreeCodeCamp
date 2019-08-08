@@ -11,41 +11,82 @@
 // Otherwise, return {status: "OPEN", change: [...]}, with the change due in coins and bills, sorted in highest to lowest order, as the value of the change key.
 
 function checkCashRegister(price, cash, cid) {
-  const currencyUnit = [
-    { name: 'PENNY', value: 0.01 },
-    { name: 'NICKEL', value: 0.05 },
-    { name: 'DIME', value: 0.1 },
-    { name: 'QUARTER', value: 0.25 },
-    { name: 'DOLLAR', value: 1 },
-    { name: 'FIVE', value: 5 },
-    { name: 'TEN', value: 10 },
-    { name: 'TWENTY', value: 20 },
-    { name: 'ONE HUNDRED', value: 100 }
-  ];
+  // Define the currency units
+  const currencyUnit = {
+    PENNY: 0.01,
+    NICKEL: 0.05,
+    DIME: 0.1,
+    QUARTER: 0.25,
+    ONE: 1,
+    FIVE: 5,
+    TEN: 10,
+    TWENTY: 20,
+    'ONE HUNDRED': 100
+  };
 
-  const changeDue = cash - price;
+  let changeDue = cash - price; // Calculate change that is to be paid
 
+  // Get the amount of cash in registers for each currency
   const amount = cid.map(perChange =>
     perChange.filter(change => typeof change === 'number')
   );
 
-  const flattenedAmountArr = [].concat.apply([], amount);
+  const flattenedAmountArr = [].concat.apply([], amount); // Flatten nested arrays having amount
 
-  const totalCashInDrawer = flattenedAmountArr.reduce((a, b) => a + b);
+  const totalCashInDrawer = flattenedAmountArr.reduce((a, b) => a + b); // Calculate total cash in drawer
 
+  // If it is same, means that it is paid. No need to give any change
   if (totalCashInDrawer === changeDue) {
     return { status: 'CLOSED', change: cid };
   }
 
-  if (
-    totalCashInDrawer < changeDue ||
-    !flattenedAmountArr.every(amount => amount % changeDue !== 0)
-  ) {
+  // If there is less cash in drawer, means there is no change to give
+  if (totalCashInDrawer < changeDue) {
     return { status: 'INSUFFICIENT_FUNDS', change: [] };
   }
 
+  // If there is cash in drawer more than the change to give
   if (totalCashInDrawer > changeDue) {
-    return { status: 'OPEN' };
+    const reversedArr = cid.reverse(); // Reverse the cash in drawer array so that we can loop it correctly in order
+    const change = []; // Change to give
+
+    // Here we round a given number to it's lowest multiple i.e changeDue = 16.74, currencyUnitValue = 5, roundNumber = 15
+    const roundNumber = (changeDue, currencyUnitValue) =>
+      Math.floor(changeDue / currencyUnitValue) * currencyUnitValue;
+
+    // Loop through the reversed nested array
+    for (let i = 0; i < reversedArr.length; i++) {
+      const currencyUnitValue = currencyUnit[reversedArr[i][0]]; // Get the currency unit value
+
+      // If the currency unit's value  is greater than the change to give then skip that value and got to next element
+      if (currencyUnitValue > changeDue) {
+        continue;
+      }
+
+      if (currencyUnitValue < changeDue) {
+        const cashInDrawerUnitName = reversedArr[i][0];
+        const cashInDrawerAmountForThatUnit = reversedArr[i][1];
+
+        // If in cash in drawer amount for that unit is greater than the change to be given the we need to give it's multiple cash change
+        if (cashInDrawerAmountForThatUnit > changeDue) {
+          const roundChange = roundNumber(changeDue, currencyUnitValue);
+
+          change.push([cashInDrawerUnitName, roundChange]);
+          changeDue -= roundChange; // Update change to be given
+          changeDue = changeDue.toFixed(2); // Limit the change to be given to 2 decimals
+        } else {
+          changeDue = changeDue - cashInDrawerAmountForThatUnit; // If we can give all change for that unit i.e if it is less than the change to be given then give it completely and update that change
+          changeDue = changeDue.toFixed(2);
+          change.push([cashInDrawerUnitName, cashInDrawerAmountForThatUnit]);
+        }
+      }
+    }
+
+    // If there is no change after everything or the change is still there means there are no correct funds to be given as change
+    if (change.length < 1 || changeDue > 0) {
+      return { status: 'INSUFFICIENT_FUNDS', change: [] };
+    }
+    return { status: 'OPEN', change };
   }
 }
 
@@ -114,5 +155,3 @@ console.log(
     ['ONE HUNDRED', 0]
   ])
 );
-
-// https://www.youtube.com/watch?v=d-Q7BvjERwo
